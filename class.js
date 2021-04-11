@@ -30,7 +30,7 @@ try {
     return;                     //if there is any error then it prints and returns the function
 }
 
-function uploadfile(filename,filepath) {
+function uploadfile() {
     return new Promise(function (resolve, reject) {
         browserPromise.then(function (browser) {
             let pagesPromise = browser.pages(); //returning an arraylist of pages
@@ -71,8 +71,8 @@ function uploadfile(filename,filepath) {
                 }
             }
             return Promise.all(temp);
-        }).then(function(data){
-            for(let i of data){
+        }).then(function (data) {
+            for (let i of data) {
                 classnames.push(i);
             }
         }).then(function () {
@@ -89,89 +89,101 @@ function uploadfile(filename,filepath) {
                 }
             }
             return Promise.all(temp);
-        }).then(function(data){
-            for(let i of data){
+        }).then(function (data) {
+            for (let i of data) {
                 classlink.push(i);
             }
-        }).then(function(){
-            let subname = filename[0];
-            if(classnames.includes(subname)){
-                let link = classlink[classnames.indexOf(subname)];
-                return link;
-            }else{
-                return "subject not found";
+            return console.log(classlink);
+        }).then(function () {
+            if (currentfile.length > 0) {
+                let filet = currentfile[0];
+                let filenamet = filet.split("-");
+                let filepatht = "./files/" + filet;
+                let subnamet = filenamet[0];
+                let promiseUpload;
+                if (classnames.includes(subnamet)) {
+                    let link = classlink[classnames.indexOf(subname)];
+                    promiseUpload = uploaded(filenamet,filepatht,link);
+                }  
+                for (let i = 1; i < currentfile.length; i++) {
+                    let file = currentfile[i];
+                    let filename = file.split("-");
+                    let filepath = "./files/" + file;
+                    let subname = filename[0];
+                    if (classnames.includes(subname)) {
+                        let link = classlink[classnames.indexOf(subname)];
+                        promiseUpload = promiseUpload.then(function(){
+                            return uploaded(filename,filepath,link);
+                        })
+                    }  
+                }
             }
-        }).then(function(url){
-            let gotoclassPromise = tab.goto(url);
-            return gotoclassPromise;
-        }).then(function(){
+        })
+    })
+};
+
+function uploaded(filename, filepath, link) {
+    return new Promise(function (resolve, reject) {
+        tab.goto(link).then(function () {
             let waitforass = tab.waitForSelector(".hrUpcomingAssignmentGroup a");
             return waitforass;
-        }).then(function(){
+        }).then(function () {
             let assPromise = tab.$$(".hrUpcomingAssignmentGroup a");
             return assPromise;
-        }).then(function(data){
+        }).then(function (data) {
             let assign = [];
-            for(let i of data){
-                let temp = tab.evaluate(function(ele){
+            for (let i of data) {
+                let temp = tab.evaluate(function (ele) {
                     return ele.innerHTML;
-                },i);
+                }, i);
                 assign.push(temp);
             }
             return Promise.all(assign);
-        }).then(function(data){
-            for(let i of data){
+        }).then(function (data) {
+            for (let i of data) {
                 let divide = i.split(" ");
                 onlyassign.push(divide[3]);
             }
             return onlyassign;
-        }).then(function(data){
+        }).then(function (data) {
             let waitforasslink = tab.$$(".hrUpcomingAssignmentGroup a");
             return waitforasslink;
-        }).then(function(data){
+        }).then(function (data) {
             let temparr = [];
-            for(let i of data){
-                let temp = tab.evaluate(function(ele){
+            for (let i of data) {
+                let temp = tab.evaluate(function (ele) {
                     return ele.href;
-                },i);
+                }, i);
                 temparr.push(temp);
             }
             return Promise.all(temparr);
-        }).then(function(data){
+        }).then(function (data) {
             assignLink = data;
             let l;
-            if(onlyassign.includes(filename[1])){
+            if (onlyassign.includes(filename[1])) {
                 l = assignLink[onlyassign.indexOf(filename[1])];
             }
             let assigntab = tab.goto(l);
             return assigntab;
-        }).then(function(){
-            let waittemp = tab.waitForNavigation({waitUntil: "networkidle2"});
+        }).then(function () {
+            let waittemp = tab.waitForNavigation({ waitUntil: "networkidle2" });
             return waittemp;
-        }).then(function(){
-            let waitclickbtn = tab.waitForSelector(".U26fgb.REtOWc.cd29Sd.p0oLxb.BEAGS.CG2qQ.bVp04e",{visible:true});
+        }).then(function () {
+            let waitclickbtn = tab.waitForSelector(".U26fgb.REtOWc.cd29Sd.p0oLxb.BEAGS.CG2qQ.bVp04e", { visible: true });
             return waitclickbtn;
-        }).then(function(clickbtnfind){
+        }).then(function (clickbtnfind) {
             let clickbtn = tab.click(".U26fgb.REtOWc.cd29Sd.p0oLxb.BEAGS.CG2qQ.bVp04e");
             return clickbtn;
-        }).then(function(){
+        }).then(function () {
             let inputfilepromise = tab.$("input[type=file]");
             return inputfilepromise;
-        }).then(function(inputfilepromise){
+        }).then(function (inputfilepromise) {
             let uf = inputfilepromise.uploadFile(filepath);
             return uf;
         })
     })
-}
+};
 // let str = "Operating system-Assignment";
 // let arr = str.split("-");
 // uploadfile(arr,"./files/waste.js");
-if(currentfile.length>0){
-    for(let i=currentfile.length-1;i>=0;i--){
-        let file = currentfile[i];
-        let filename = file.split("-");
-        let filepath = "./files/"+file;
-        uploadfile(filename,filepath);
-        visitedfiles.push(file.pop());
-    }
-}
+uploadfile();
