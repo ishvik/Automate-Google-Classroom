@@ -96,14 +96,14 @@ function uploadfile() {
             if (currentfile.length > 0) {
                 let filestrt = currentfile[0].split("-");
                 let subnamet = filestrt[0];
-                let filepatht = "./files"+filestrt[1];
+                let filepatht = "./files" + filestrt[1];
                 let submitass;
                 if (classnames.includes(subnamet)) {
                     linkt = classlink[classnames.indexOf(subnamet)];
                     console.log(linkt);
-                    submitassPromise = uploaded(filestrt,filepatht,linkt);
+                    submitassPromise = uploaded(filestrt, filepatht, linkt);
                 }
-                
+
                 for (let i = 1; i < currentfile.length; i++) {
                     let filestr = currentfile[i].split("-");
                     let subname = filestr[0];
@@ -112,7 +112,7 @@ function uploadfile() {
                     // console.log(classlink);
                     if (classnames.includes(subname)) {
                         link = classlink[classnames.indexOf(subname)];
-                        let fp = "./files"+filestr[1];
+                        let fp = "./files" + filestr[1];
                         // submitassPromise = submitassPromise.then(function(){
                         //     return uploaded(filestr,fp,link)
                         // })
@@ -134,44 +134,57 @@ function uploadfile() {
 
 function uploaded(filename, filepath, link) {
     let assignName = [];
-    let assignLink = []; 
+    let assignLink = [];
     return new Promise(function (resolve, reject) {
         tab.goto(link).then(function () {
             let waitforAssignPromise = tab.waitForSelector(".lziZub.tLDEHd h2 span");
             return waitforAssignPromise;
-        }).then(function(){
+        }).then(function () {
             let assignNamePromise = tab.$$(".lziZub.tLDEHd h2 span");
             return assignNamePromise;
-        }).then(function(data){
+        }).then(function (data) {
             let temp = [];
             for (let i = 0; i < data.length; i++) {
                 let cl = tab.evaluate(function (ele) {
                     return ele.textContent;
                 }, data[i]);
-                    temp.push(cl);
+                temp.push(cl);
             }
             return Promise.all(temp);
-        }).then(function(data){
-            for(let i=0;i<data.length;i++){
+        }).then(function (data) {
+            for (let i = 0; i < data.length; i++) {
                 let assname = data[i].split(":");
                 assignName.push(assname[1]);
             }
             return console.log(assignName);
-        }).then(function(){
-            let assigLinkPromise = tab.$$(".Zzplvb");
-            return assigLinkPromise;
-        }).then(function(data){
+        }).then(function (data) {
+            let waitforasslink = tab.$$(".hrUpcomingAssignmentGroup a");
+            return waitforasslink;
+        }).then(function (data) {
+            let temparr = [];
+            for (let i of data) {
+                let temp = tab.evaluate(function (ele) {
+                    return ele.href;
+                }, i);
+                temparr.push(temp);
+            }
+            return Promise.all(temparr);
+        }).then(function (data) {
             assignLink = data;
-        }).then(function(){
             let t = filename[1];
             let splitt = t.split(".");
             let Filename = splitt[0]; //"Assignment" Assignment
-            let temp = " "+'"'+Filename+'"';
-            if(assignName.includes(temp)){
+            let temp = " " + '"' + Filename + '"';
+            if (assignName.includes(temp)) {
                 let link = assignLink[assignName.indexOf(temp)];
-                tab.click(link);
+                tab.goto(link);
             }
-            return console.log(temp);
+        }).then(function(){
+            let temp = tab.waitForNavigation();
+            return temp;
+        }).then(function(){
+            let addClick = tab.click("div[guidedhelpid='addOrCreateMaterial']");
+            return addClick;
         })
     })
 };
@@ -180,3 +193,19 @@ function uploaded(filename, filepath, link) {
 // let arr = str.split("-");
 // uploadfile(arr,"./files/waste.js");
 uploadfile();
+
+
+// .then(function(data){
+//     assignLink = data;
+// }).then(function(){
+//     let t = filename[1];
+//     let splitt = t.split(".");
+//     let Filename = splitt[0]; //"Assignment" Assignment
+//     let temp = " "+'"'+Filename+'"';
+//     if(assignName.includes(temp)){
+//         let link = assignLink[assignName.indexOf(temp)];
+//         tab.click(link);
+//     }
+//     return console.log(temp);
+// })
+//a[data-focus-id="LPEWg|315227277046"]
